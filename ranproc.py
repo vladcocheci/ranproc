@@ -14,7 +14,7 @@ cod_RAN_list =[]
 exceptions_file_name = "exceptions.txt"
 output_file_name = "repertoriul_cluj.csv"
 
-# main function
+### main function
 def main():
     cj_link_list = cj_list_generator(cj_list_base_link)
     RAN_scraper(cj_link_list)
@@ -77,6 +77,7 @@ def scraper(link_list):
             f = urllib.request.urlopen(req)
             soup = bs(f.read().decode('utf-8'))
 
+            ### Archeological Site Info
             try:
                 link_harta = soup.find("td", string = "Informaţii despre SIT").find_next_sibling("td").find("a").get('href')
             except:
@@ -152,9 +153,19 @@ def scraper(link_list):
                 data_modif = "lipsa data"
             print(data_modif)
 
+            ### Bibliography
+            biblio = ""
+            try:
+                tr_biblio_list = soup.find(string = "Bibliografie").find_parent("tr").find_next_siblings("tr")
+                for tr in tr_biblio_list:
+                    biblio = biblio + tr.find("td").contents[0] + "\n"
+            except:
+                biblio = "lipsa bibliografie"
+            print(biblio)
+
             print("__________________________________________________________________________________________________________")
             
-            rec += [[link_harta, cod_LMI, cod_RAN, nume, judet, uat, localitate, punct, reper, categorie, tip, data_modif]]
+            rec += [[link_harta, cod_LMI, cod_RAN, nume, judet, uat, localitate, punct, reper, categorie, tip, data_modif, biblio]]
         
         except Exception as e:
             exceptions_file = open(exceptions_file_name,'a')
@@ -163,7 +174,7 @@ def scraper(link_list):
 
         time.sleep(1)
 
-    df = pd.DataFrame(rec, columns = ['link_harta', 'cod_LMI', 'cod_RAN', 'nume', 'judet', 'uat', 'localitate', 'punct', 'reper', 'categorie', 'tip', 'data_modif'])
+    df = pd.DataFrame(rec, columns = ['link_harta', 'cod_LMI', 'cod_RAN', 'nume', 'judet', 'uat', 'localitate', 'punct', 'reper', 'categorie', 'tip', 'data_modif', 'bibliografie'])
     df.to_csv(output_file_name, index = False)
 
 # calling the main function
