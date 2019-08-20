@@ -4,15 +4,15 @@ import re
 import pandas as pd
 import csv
 import time
-import sys # for command line arguments
 from yelp_uri.encoding import recode_uri
 
 # base link for cluj county
-cj_list_base_link = "http://ran.cimec.ro/sel.asp?lpag=100&Lang=RO&layers=&crsl=2&csel=2&clst=1&jud=14&campsel=jud&nr="
+cj_list_base_link = "http://ran.cimec.ro/sel.asp?lpag=100&Lang=RO&layers=&crsl=2&csel=2&clst=1&jud=14&campsel=jud&nr="  # lpag=100 -> 100 records/page
 
 cod_RAN_list =[]
-exceptions_file_name = "exceptions.txt"
-output_file_name = "repertoriul_cluj.csv"
+exceptions_file_name = "exceptions.txt"             # exceptions file
+output_file_name1 = "repertoriul_cluj.csv"          # file that will store general information from all tables
+output_file_name2 = "descoperiri_situri_cluj.csv"   # file that will store discovery information from all tables
 
 ### main function
 def main():
@@ -25,13 +25,14 @@ def main():
 
 # function generating the list of links for cluj county
 def cj_list_generator(base_link):
-    link_list = []
-    for i in range(1, 8):
+    link_list = []  # a list containing all the links to the pages containing information from cluj county
+    for i in range(1, 8):   # there are 7 pages of maximum 100 records/page for cluj county
         url = base_link + str(i)
         link_list.append(url)
     return link_list
 
-# RAN scraper function
+
+# RAN scraper function -returns a list of links to all records from the pages containing information from cluj county
 def RAN_scraper(link_list):
     for url in link_list:
         try:
@@ -60,9 +61,11 @@ def RAN_scraper(link_list):
         print("http://ran.cimec.ro/" + href)
         time.sleep(1)   
 
-# content scraper function
+
+# content scraper function -scraps relevant content from each page and saves it to .csv files
 def scraper(link_list):
-    rec = []
+    rec = []    # stores general information from all tables
+    disc = []   # stores discovery information from all tables
 
     for url in link_list:
         url = recode_uri(url)   # re-encoding potentially poorly encoded urls
@@ -98,6 +101,8 @@ def scraper(link_list):
             except:
                 cod_RAN = "lipsa cod"
             print(cod_RAN)
+            regex = re.compile(r"\.[0-9]*")
+            siruta = re.sub(regex, '', cod_RAN)
         
             try:
                 nume = soup.find("td", string = "Nume").find_next_sibling("td").contents[0]
@@ -163,9 +168,24 @@ def scraper(link_list):
                 biblio = "lipsa bibliografie"
             print(biblio)
 
-            print("__________________________________________________________________________________________________________")
+            rec.append([siruta, link_harta, cod_LMI, cod_RAN, nume, judet, uat, localitate, punct, reper, categorie, tip, data_modif, biblio])
+
+            ### Discoveries
+            try:
+                tr_disc_list = soup.find("td", string = "Categorie/ Tip").find_parent("tr").find_next_siblings("tr")
+                for tr in tr_disc_list:
+                    td_list = tr.findChildren("td")
+                    td_record = []
+                    td_record.append(siruta)
+                    td_record.append(cod_RAN)
+                    for td in td_list:
+                        td_record.append(re.sub('(\n|\r|\t|\xa0)', '', td.contents[0])) # removing escape characters
+                    print(str(td_record))
+                    disc.append(td_record)
+            except:
+                disc.append([siruta, cod_RAN, '', '', '', '', ''])
             
-            rec += [[link_harta, cod_LMI, cod_RAN, nume, judet, uat, localitate, punct, reper, categorie, tip, data_modif, biblio]]
+            print("__________________________________________________________________________________________________________")    
         
         except Exception as e:
             exceptions_file = open(exceptions_file_name,'a')
@@ -174,8 +194,12 @@ def scraper(link_list):
 
         time.sleep(1)
 
-    df = pd.DataFrame(rec, columns = ['link_harta', 'cod_LMI', 'cod_RAN', 'nume', 'judet', 'uat', 'localitate', 'punct', 'reper', 'categorie', 'tip', 'data_modif', 'bibliografie'])
-    df.to_csv(output_file_name, index = False)
+    df = pd.DataFrame(rec, columns = ['siruta', 'link_harta', 'cod_LMI', 'cod_RAN', 'nume', 'judet', 'uat', 'localitate', 'punct', 'reper', 'categorie', 'tip', 'data_modif', 'bibliografie'])
+    df.to_csv(output_file_name1, index = False)
+
+    dfd = pd.DataFrame(disc, columns = ['siruta', 'cod_RAN', 'categorie', 'epoca', 'cultura', 'descriere', 'cod_LMI'])
+    dfd.to_csv(output_file_name2, index = False)
+
 
 # calling the main function
 if __name__ == "__main__":
