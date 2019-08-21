@@ -1,5 +1,7 @@
 __pycache__
 .vscode
+geckodriver.log
 exceptions.txt
 repertoriul_cluj.csv
 descoperiri_situri_cluj.csv
+repertoriul_cluj_coord.csv
