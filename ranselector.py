@@ -17,8 +17,8 @@ def main():
         except:
             coord = "Null : Null"
         xy = coord.split(" : ")
-        x = xy[0]
-        y = xy[1]
+        y = xy[0]
+        x = xy[1]
         print(x + ": " + y)
         x_field.append(x)
         y_field.append(y)
