@@ -97,7 +97,7 @@ def scraper(link_list):
             print(cod_LMI)
 
             try:
-                cod_RAN = soup.find("td", string = "Cod RAN").find_next_sibling("td").contents[0]
+                cod_RAN = str(soup.find("td", string = "Cod RAN").find_next_sibling("td").contents[0])
             except:
                 cod_RAN = "lipsa cod"
             print(cod_RAN)
