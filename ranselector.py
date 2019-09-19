@@ -8,7 +8,7 @@ output_file_name = "repertoriul_cluj_coord.csv"
 
 ### main function
 def main():
-    for i in range(1,43):   # conties are numbered 1 to 42
+    for i in range(1,43):   # counties are numbered 1 to 42
         input_file_name = "RAN_judetul" + str(i) + ".csv"
         output_file_name = "RAN_coord_judetul" + str(i) + ".csv"
 

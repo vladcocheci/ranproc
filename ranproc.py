@@ -6,22 +6,11 @@ import csv
 import time
 from yelp_uri.encoding import recode_uri
 
-# base link for cluj county
-# cj_list_base_link = "http://ran.cimec.ro/sel.asp?lpag=100&Lang=RO&layers=&crsl=2&csel=2&clst=1&jud=14&campsel=jud&nr="  # lpag=100 -> 100 records/page
-
-"http://ran.cimec.ro/sel.asp?jud=1&Lang=RO&crsl=2&csel=2&clst=1&lpag=20&campsel=jud&nr=1"
-
-# base link for all counties
-list_base_link = "http://ran.cimec.ro/sel.asp?lpag=100&Lang=RO&layers=&crsl=2&csel=2&clst=1&campsel=cat&nr="
-
-# cod_RAN_list =[]
 exceptions_file_name = "exceptions.txt"     # exceptions file
-# output_file_name1 = "RAN.csv"               # file that will store general information from all tables
-# output_file_name2 = "RAN_descoperiri.csv"   # file that will store discovery information from all tables
 
 ### main function
 def main():
-    for i in range(1,43):   # conties are numbered 1 to 42
+    for i in range(1,43):   # counties are numbered 1 to 42
         output_file_name1 = "RAN_judetul" + str(i) + ".csv"
         output_file_name2 = "DESCOPERIRI_judetul" + str(i) + ".csv"
 
