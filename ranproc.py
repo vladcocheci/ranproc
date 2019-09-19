@@ -7,33 +7,71 @@ import time
 from yelp_uri.encoding import recode_uri
 
 # base link for cluj county
-cj_list_base_link = "http://ran.cimec.ro/sel.asp?lpag=100&Lang=RO&layers=&crsl=2&csel=2&clst=1&jud=14&campsel=jud&nr="  # lpag=100 -> 100 records/page
+# cj_list_base_link = "http://ran.cimec.ro/sel.asp?lpag=100&Lang=RO&layers=&crsl=2&csel=2&clst=1&jud=14&campsel=jud&nr="  # lpag=100 -> 100 records/page
 
-cod_RAN_list =[]
-exceptions_file_name = "exceptions.txt"             # exceptions file
-output_file_name1 = "repertoriul_cluj.csv"          # file that will store general information from all tables
-output_file_name2 = "descoperiri_situri_cluj.csv"   # file that will store discovery information from all tables
+"http://ran.cimec.ro/sel.asp?jud=1&Lang=RO&crsl=2&csel=2&clst=1&lpag=20&campsel=jud&nr=1"
+
+# base link for all counties
+list_base_link = "http://ran.cimec.ro/sel.asp?lpag=100&Lang=RO&layers=&crsl=2&csel=2&clst=1&campsel=cat&nr="
+
+# cod_RAN_list =[]
+exceptions_file_name = "exceptions.txt"     # exceptions file
+# output_file_name1 = "RAN.csv"               # file that will store general information from all tables
+# output_file_name2 = "RAN_descoperiri.csv"   # file that will store discovery information from all tables
 
 ### main function
 def main():
-    cj_link_list = cj_list_generator(cj_list_base_link)
-    RAN_scraper(cj_link_list)
+    for i in range(1,43):   # conties are numbered 1 to 42
+        output_file_name1 = "RAN_judetul" + str(i) + ".csv"
+        output_file_name2 = "DESCOPERIRI_judetul" + str(i) + ".csv"
+
+        list_base_link = "http://ran.cimec.ro/sel.asp?jud=" + str(i) + "&Lang=RO&crsl=2&csel=2&clst=1&lpag=20&campsel=jud&nr="
+        n = get_pages_no(list_base_link)
+        
+        link_list = list_generator(list_base_link, n)
     
-    to_scan_list = cod_RAN_list
-    scraper(to_scan_list)
+        to_scan_list = RAN_scraper(link_list)
+        scraper(to_scan_list, output_file_name1, output_file_name2)
+
+    
+# function that returns the number of RAN pages
+def get_pages_no(base_link):
+    try:
+        req = urllib.request.Request(
+            base_link + "1",
+            data=None,
+            headers={
+                'User-Agent': 'Mozilla/5.0'
+            }
+        )
+        f = urllib.request.urlopen(req)
+        soup = bs(f.read().decode('utf-8'))
+
+        try:
+            pages_no_string = soup.find("font", class_ = "Verdana2").contents[0].split(" ")[2]
+            pages_no = int(pages_no_string)
+            return pages_no
+        except:
+            print("error")
+
+    except Exception as e:
+        exceptions_file = open(exceptions_file_name,'a')
+        exceptions_file.write(str(e) + ": " + url + "\n")
+        exceptions_file.close()
 
 
-# function generating the list of links for cluj county
-def cj_list_generator(base_link):
-    link_list = []  # a list containing all the links to the pages containing information from cluj county
-    for i in range(1, 8):   # there are 7 pages of maximum 100 records/page for cluj county
+# function generating the list of links for all RAN pages
+def list_generator(base_link, n):
+    link_list = []  # a list containing all the links to the RAN site pages
+    for i in range(1, n+1):   # there are n pages of maximum 100 records/page
         url = base_link + str(i)
         link_list.append(url)
     return link_list
 
 
-# RAN scraper function -returns a list of links to all records from the pages containing information from cluj county
+# RAN scraper function -returns a list of links to all records
 def RAN_scraper(link_list):
+    cod_RAN_list = []
     for url in link_list:
         try:
             req = urllib.request.Request(
@@ -59,11 +97,12 @@ def RAN_scraper(link_list):
             exceptions_file.close()
 
         print("http://ran.cimec.ro/" + href)
-        time.sleep(1)   
+        time.sleep(1)
+    return cod_RAN_list
 
 
 # content scraper function -scraps relevant content from each page and saves it to .csv files
-def scraper(link_list):
+def scraper(link_list, output_file_name1, output_file_name2):
     rec = []    # stores general information from all tables
     disc = []   # stores discovery information from all tables
 

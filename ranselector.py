@@ -8,25 +8,32 @@ output_file_name = "repertoriul_cluj_coord.csv"
 
 ### main function
 def main():
-    df = pd.read_csv("repertoriul_cluj.csv")
-    x_field, y_field = [], []
+    for i in range(1,43):   # conties are numbered 1 to 42
+        input_file_name = "RAN_judetul" + str(i) + ".csv"
+        output_file_name = "RAN_coord_judetul" + str(i) + ".csv"
 
-    for link in df["link_harta"]:
-        try:
-            coord = get_coordinates(link)
-        except:
-            coord = "Null : Null"
-        xy = coord.split(" : ")
-        y = xy[0]
-        x = xy[1]
-        print(x + ": " + y)
-        x_field.append(x)
-        y_field.append(y)
+        df = pd.read_csv(input_file_name)
+        x_field, y_field = [], []
+        counter = 1
+
+        for link in df["link_harta"]:
+            try:
+                coord = get_coordinates(link)
+            except:
+                coord = "Null : Null"
+
+            xy = coord.split(" : ")
+            y = xy[0]
+            x = xy[1]
+            print("judetul " + str(i) + " - " + str(counter) + " - " + x + ": " + y)
+            x_field.append(x)
+            y_field.append(y)
+            counter += 1
 
 
-    df["x_field"] = x_field
-    df["y_field"] = y_field
-    df.to_csv(output_file_name, index = False)
+        df["x_field"] = x_field
+        df["y_field"] = y_field
+        df.to_csv(output_file_name, index = False)
 
      
 
