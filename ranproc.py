@@ -52,7 +52,7 @@ def get_pages_no(base_link):
 # function generating the list of links for all RAN pages
 def list_generator(base_link, n):
     link_list = []  # a list containing all the links to the RAN site pages
-    for i in range(1, n+1):   # there are n pages of maximum 100 records/page
+    for i in range(1, n+1):   # there are n pages of containing maximum 20 records/page
         url = base_link + str(i)
         link_list.append(url)
     return link_list

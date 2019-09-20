@@ -4,8 +4,6 @@ import re
 import pandas as pd
 import csv
 
-output_file_name = "repertoriul_cluj_coord.csv"
-
 ### main function
 def main():
     for i in range(1,43):   # counties are numbered 1 to 42
@@ -30,13 +28,11 @@ def main():
             y_field.append(y)
             counter += 1
 
-
         df["x_field"] = x_field
         df["y_field"] = y_field
         df.to_csv(output_file_name, index = False)
 
      
-
 def get_coordinates(link):
     browser = webdriver.Firefox()
     browser.get(link)
