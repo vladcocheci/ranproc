@@ -5,22 +5,36 @@ import pandas as pd
 import csv
 import time
 from yelp_uri.encoding import recode_uri
+from random import randrange
+import os.path
+from os import path
 
 exceptions_file_name = "exceptions.txt"     # exceptions file
 
 ### main function
 def main():
-    for i in range(1,43):   # counties are numbered 1 to 42
+    for i in range(2,6):   # counties are numbered 1 to 42
         output_file_name1 = "RAN_judetul" + str(i) + ".csv"
         output_file_name2 = "DESCOPERIRI_judetul" + str(i) + ".csv"
 
         list_base_link = "http://ran.cimec.ro/sel.asp?jud=" + str(i) + "&Lang=RO&crsl=2&csel=2&clst=1&lpag=20&campsel=jud&nr="
         n = get_pages_no(list_base_link)
+        while n == None:
+            time.sleep(1 + randrange(3))
+            n = get_pages_no(list_base_link)
+        print(n)
         
         link_list = list_generator(list_base_link, n)
     
-        to_scan_list = RAN_scraper(link_list)
-        scraper(to_scan_list, output_file_name1, output_file_name2)
+        to_scan_list = []
+        while link_list:
+            link_list, to_scan = RAN_scraper(link_list)
+            to_scan_list.extend(to_scan)
+        print(to_scan_list)
+        print(len(to_scan_list))
+
+        while to_scan_list: 
+            to_scan_list = scraper(to_scan_list, output_file_name1, output_file_name2)
 
     
 # function that returns the number of RAN pages
@@ -45,7 +59,7 @@ def get_pages_no(base_link):
 
     except Exception as e:
         exceptions_file = open(exceptions_file_name,'a')
-        exceptions_file.write(str(e) + ": " + url + "\n")
+        exceptions_file.write(str(e) + ": " + base_link + "\n")
         exceptions_file.close()
 
 
@@ -61,6 +75,7 @@ def list_generator(base_link, n):
 # RAN scraper function -returns a list of links to all records
 def RAN_scraper(link_list):
     cod_RAN_list = []
+    error_links = []
     for url in link_list:
         try:
             req = urllib.request.Request(
@@ -79,21 +94,24 @@ def RAN_scraper(link_list):
                 href = link.get('href')
                 if re.match(re.compile(r"[0-9]*\.[0-9]*"),text):
                     cod_RAN_list.append("http://ran.cimec.ro/" + href)
+                    print("http://ran.cimec.ro/" + href)
         
         except Exception as e:
             exceptions_file = open(exceptions_file_name,'a')
-            exceptions_file.write(str(e) + ": " + url + "\n")
+            exceptions_file.write("!!!" + str(e) + ": " + url + "\n")
             exceptions_file.close()
+            error_links.append(url)
 
-        print("http://ran.cimec.ro/" + href)
-        time.sleep(1)
-    return cod_RAN_list
+        time.sleep(randrange(3))
+    return error_links, cod_RAN_list
 
 
 # content scraper function -scraps relevant content from each page and saves it to .csv files
 def scraper(link_list, output_file_name1, output_file_name2):
     rec = []    # stores general information from all tables
     disc = []   # stores discovery information from all tables
+    error_links = []    # stores links that raised errors when trying to open
+    count = 0
 
     for url in link_list:
         url = recode_uri(url)   # re-encoding potentially poorly encoded urls
@@ -107,6 +125,7 @@ def scraper(link_list, output_file_name1, output_file_name2):
             )
             f = urllib.request.urlopen(req)
             soup = bs(f.read().decode('utf-8'))
+            count += 1
 
             ### Archeological Site Info
             try:
@@ -219,14 +238,22 @@ def scraper(link_list, output_file_name1, output_file_name2):
             exceptions_file = open(exceptions_file_name,'a')
             exceptions_file.write(str(e) + ": " + url + "\n")
             exceptions_file.close()
+            error_links.append(url)
 
-        time.sleep(1)
+        time.sleep(1 + randrange(3))
+        if count % 10 == 0:
+            print("sleeping 5")
+            time.sleep(5)
 
     df = pd.DataFrame(rec, columns = ['siruta', 'link_harta', 'cod_LMI', 'cod_RAN', 'nume', 'judet', 'uat', 'localitate', 'punct', 'reper', 'categorie', 'tip', 'data_modif', 'bibliografie'])
-    df.to_csv(output_file_name1, index = False)
+    df.to_csv(output_file_name1, mode = 'a', header = not(path.exists(output_file_name1)), index = False)
 
     dfd = pd.DataFrame(disc, columns = ['siruta', 'cod_RAN', 'categorie', 'epoca', 'cultura', 'descriere', 'cod_LMI'])
-    dfd.to_csv(output_file_name2, index = False)
+    dfd.to_csv(output_file_name2, mode = 'a', header = not(path.exists(output_file_name2)), index = False)
+
+    exceptions_file = open(exceptions_file_name,'a')
+    exceptions_file.write("________________________________________________________________" + "\n")
+    return error_links
 
 
 # calling the main function
