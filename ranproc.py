@@ -13,7 +13,7 @@ exceptions_file_name = "exceptions.txt"     # exceptions file
 
 ### main function
 def main():
-    for i in range(2,6):   # counties are numbered 1 to 42
+    for i in range(1,43):   # counties are numbered 1 to 42
         output_file_name1 = "RAN_judetul" + str(i) + ".csv"
         output_file_name2 = "DESCOPERIRI_judetul" + str(i) + ".csv"
 
