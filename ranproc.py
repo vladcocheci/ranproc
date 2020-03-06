@@ -19,22 +19,22 @@ def main():
 
         list_base_link = "http://ran.cimec.ro/sel.asp?jud=" + str(i) + "&Lang=RO&crsl=2&csel=2&clst=1&lpag=20&campsel=jud&nr="
         n = get_pages_no(list_base_link)
-        while n == None:
+        while n == None:    # n is None if an url error occured
             time.sleep(1 + randrange(3))
             n = get_pages_no(list_base_link)
         print(n)
         
         link_list = list_generator(list_base_link, n)
     
-        to_scan_list = []
+        to_scan_list = []   # the list of links to scrape
         while link_list:
-            link_list, to_scan = RAN_scraper(link_list)
+            link_list, to_scan = RAN_scraper(link_list) # link_list contains now links to pages that had url errors 
             to_scan_list.extend(to_scan)
         print(to_scan_list)
         print(len(to_scan_list))
 
-        while to_scan_list: 
-            to_scan_list = scraper(to_scan_list, output_file_name1, output_file_name2)
+        while to_scan_list:
+            to_scan_list = scraper(to_scan_list, output_file_name1, output_file_name2) # to_scan_list contains now links to pages that had url errors 
 
     
 # function that returns the number of RAN pages
@@ -249,7 +249,7 @@ def scraper(link_list, output_file_name1, output_file_name2):
     df.to_csv(output_file_name1, mode = 'a', header = not(path.exists(output_file_name1)), index = False)
 
     dfd = pd.DataFrame(disc, columns = ['siruta', 'cod_RAN', 'categorie', 'epoca', 'cultura', 'descriere', 'cod_LMI'])
-    dfd.to_csv(output_file_name2, mode = 'a', header = not(path.exists(output_file_name2)), index = False)
+    dfd.to_csv(output_file_name2, mode = 'a', header = not(path.exists(output_file_name2)), index = False)  # if the file doesn't exist, create it and write the dataframe with a header else it append the dataframe without header
 
     exceptions_file = open(exceptions_file_name,'a')
     exceptions_file.write("________________________________________________________________" + "\n")
