@@ -3,6 +3,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 import re
 import pandas as pd
 import csv
+import time
 
 ### main function
 def main():
@@ -37,6 +38,7 @@ def get_coordinates(link):
     browser = webdriver.Firefox()
     browser.get(link)
     browser.maximize_window()
+    time.sleep(3)
 
     elem = browser.find_element_by_id("divHarta")
 
